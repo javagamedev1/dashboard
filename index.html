@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow | Gerenciamento de Projetos</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
+    <style>
+        .gantt-container {
+            height: 400px;
+            overflow-y: auto;
+        }
+        .task-modal {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .sidebar-item.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+        }
+        .gantt .bar-label {
+            font-size: 12px;
+        }
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .milestone-indicator {
+            position: relative;
+        }
+        .milestone-indicator::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #f59e0b;
+            border-radius: 50%;
+            top: 50%;
+            right: -6px;
+            transform: translateY(-50%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 shadow-md sticky top-0 z-50">
+        <div class="navbar-start">
+            <div class="dropdown">
+                <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                    <li><a class="font-medium" href="#dashboard"><i class="fas fa-chart-line mr-2"></i>Dashboard</a></li>
+                    <li><a class="font-medium" href="#projects"><i class="fas fa-project-diagram mr-2"></i>Projetos</a></li>
+                    <li><a class="font-medium" href="#tasks"><i class="fas fa-tasks mr-2"></i>Tarefas</a></li>
+                    <li><a class="font-medium" href="#team"><i class="fas fa-users mr-2"></i>Equipe</a></li>
+                    <li><a class="font-medium" href="#calendar"><i class="far fa-calendar-alt mr-2"></i>Calendário</a></li>
+                </ul>
+            </div>
+<a class="btn btn-ghost text-xl">
+                <i class="fas fa-tasks text-primary mr-2"></i>
+                <span class="font-bold">TaskFlow</span>
+            </a>
+        </div>
+        <div class="navbar-center hidden lg:flex">
+            <ul class="menu menu-horizontal px-1">
+                <li><a class="font-medium" href="#dashboard"><i class="fas fa-chart-line mr-2"></i>Dashboard</a></li>
+                <li><a class="font-medium" href="#projects"><i class="fas fa-project-diagram mr-2"></i>Projetos</a></li>
+                <li><a class="font-medium" href="#tasks"><i class="fas fa-tasks mr-2"></i>Tarefas</a></li>
+                <li><a class="font-medium" href="#team"><i class="fas fa-users mr-2"></i>Equipe</a></li>
+                <li><a class="font-medium" href="#calendar"><i class="far fa-calendar-alt mr-2"></i>Calendário</a></li>
+            </ul>
+        </div>
+        <div class="navbar-end">
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
+                    <div class="indicator">
+                        <i class="fas fa-bell text-lg"></i>
+                        <span class="badge badge-sm badge-primary indicator-item">3</span>
+                    </div>
+                </div>
+                <div tabindex="0" class="mt-3 z-[1] card card-compact dropdown-content w-80 bg-base-100 shadow">
+                    <div class="card-body">
+                        <h3 class="font-bold text-lg">Notificações</h3>
+                        <div class="border-b pb-2 mb-2">
+                            <p class="text-sm font-medium">Nova tarefa atribuída a você</p>
+                            <p class="text-xs text-gray-500">Há 5 minutos</p>
+                        </div>
+                        <div class="border-b pb-2 mb-2">
+                            <p class="text-sm font-medium">Prazo de "Design de Interface" amanhã</p>
+                            <p class="text-xs text-gray-500">Há 1 hora</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">Carlos comentou no projeto "Website Redesign"</p>
+                            <p class="text-xs text-gray-500">Há 3 horas</p>
+                        </div>
+                        <div class="card-actions mt-2">
+                            <a href="#" class="btn btn-primary btn-sm btn-block">Ver todas</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown dropdown-end ml-2">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                    <div class="w-10 rounded-full">
+                        <img alt="Avatar do usuário" src="https://ui-avatars.com/api/?name=Ana+Silva&background=3b82f6&color=fff" />
+                    </div>
+                </div>
+                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                    <li>
+                        <a class="justify-between">
+                            Perfil
+                            <span class="badge badge-primary">Novo</span>
+                        </a>
+                    </li>
+                    <li><a>Configurações</a></li>
+                    <li><a>Sair</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="drawer lg:drawer-open">
+        <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-content flex flex-col p-4">
+            <!-- Página principal -->
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold">Dashboard</h1>
+                <button class="btn btn-primary" onclick="document.getElementById('new-project-modal').showModal()">
+                    <i class="fas fa-plus mr-2"></i> Novo Projeto
+                </button>
+            </div>
+
+            <!-- Resumo do projeto -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="stats shadow">
+                    <div class="stat">
+                        <div class="stat-figure text-primary">
+                            <i class="fas fa-project-diagram text-3xl"></i>
+                        </div>
+                        <div class="stat-title">Projetos Ativos</div>
+                        <div class="stat-value text-primary">11</div>
+                        <div class="stat-desc">↗︎ 2 (40%)</div>
+                    </div>
+                </div>
+                <div class="stats shadow">
+                    <div class="stat">
+                        <div class="stat-figure text-secondary">
+                            <i class="fas fa-tasks text-3xl"></i>
+                        </div>
+                        <div class="stat-title">Tarefas Pendentes</div>
+                        <div class="stat-value text-secondary">23</div>
+                        <div class="stat-desc">↘︎ 5 (18%)</div>
+                    </div>
+                </div>
+                <div class="stats shadow">
+                    <div class="stat">
+                        <div class="stat-figure text-success">
+                            <i class="fas fa-check-circle text-3xl"></i>
+                        </div>
+                        <div class="stat-title">Tarefas Concluídas</div>
+                        <div class="stat-value text-success">42</div>
+                        <div class="stat-desc">↗︎ 12 (40%)</div>
+                    </div>
+                </div>
+                <div class="stats shadow">
+                    <div class="stat">
+                        <div class="stat-figure text-warning">
+                            <i class="fas fa-exclamation-triangle text-3xl"></i>
+                        </div>
+                        <div class="stat-title">Atrasados</div>
+                        <div class="stat-value text-warning">3</div>
+                        <div class="stat-desc">↘︎ 2 (40%)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos e Gantt -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="card bg-base-100 shadow-xl lg:col-span-1">
+                    <div class="card-body">
+                        <h2 class="card-title">Status dos Projetos</h2>
+                        <div class="h-64">
+                            <canvas id="projectStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-xl lg:col-span-2">
+                    <div class="card-body">
+                        <h2 class="card-title">Atividade da Equipe</h2>
+                        <div class="h-64">
+                            <canvas id="teamActivityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projetos Recentes -->
+            <h2 class="text-xl font-bold mb-4">Projetos Recentes</h2>
+            <div class="overflow-x-auto bg-base-100 rounded-lg shadow-md mb-6">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Nome do Projeto</th>
+                            <th>Responsável</th>
+                            <th>Status</th>
+                            <th>Progresso</th>
+                            <th>Prazo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="hover">
+                            <td>
+                                <div class="font-bold">Website Redesign</div>
+                                <div class="text-sm opacity-50">ID: PRJ-001</div>
+                            </td>
+                            <td>
+                                <div class="flex items-center space-x-3">
+                                    <div class="avatar">
+                                        <div class="mask mask-squircle w-8 h-8">
+                                            <img src="https://ui-avatars.com/api/?name=Ana+Silva&background=3b82f6&color=fff" alt="Avatar" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold">Ana Silva</div>
+                                        <div class="text-sm opacity-50">Designer</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><div class="badge badge-primary">Em Andamento</div></td>
+                            <td>
+                                <div class="flex items-center">
+                                    <progress class="progress progress-primary w-full" value="70" max="100"></progress>
+                                    <span class="ml-2">70%</span>
+                                </div>
+                            </td>
+                            <td>15/12/2023</td>
+                            <td>
+                                <button class="btn btn-sm btn-circle btn-ghost" onclick="document.getElementById('project-details-modal').showModal()">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-circle btn-ghost">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="hover">
+                            <td>
+                                <div class="font-bold">App Mobile</div>
+                                <div class="text-sm opacity-50">ID: PRJ-002</div>
+                            </td>
+                            <td>
+                                <div class="flex items-center space-x-3">
+                                    <div class="avatar">
+                                        <div class="mask mask-squircle w-8 h-8">
+                                            <img src="https://ui-avatars.com/api/?name=Carlos+Mendes&background=10b981&color=fff" alt="Avatar" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold">Carlos Mendes</div>
+                                        <div class="text-sm opacity-50">Desenvolvedor</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><div class="badge badge-warning">Atrasado</div></td>
+                            <td>
+                                <div class="flex items-center">
+                                    <progress class="progress progress-warning w-full" value="45" max="100"></progress>
+                                    <span class="ml-2">45%</span>
+                                </div>
+                            </td>
+                            <td>10/11/2023</td>
+                            <td>
+                                <button class="btn btn-sm btn-circle btn-ghost">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-circle btn-ghost">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="hover">
+                            <td>
+                                <div class="font-bold">Campanha de Marketing</div>
+                                <div class="text-sm opacity-50">ID: PRJ-003</div>
+                            </td>
+                            <td>
+                                <div class="flex items-center space-x-3">
+                                    <div class="avatar">
+                                        <div class="mask mask-squircle w-8 h-8">
+                                            <img src="https://ui-avatars.com/api/?name=Julia+Freitas&background=f59e0b&color=fff" alt="Avatar" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold">Julia Freitas</div>
+                                        <div class="text-sm opacity-50">Marketing</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><div class="badge badge-success">Concluído</div></td>
+                            <td>
+                                <div class="flex items-center">
+                                    <progress class="progress progress-success w-full" value="100" max="100"></progress>
+                                    <span class="ml-2">100%</span>
+                                </div>
+                            </td>
+                            <td>01/11/2023</td>
+                            <td>
+                                <button class="btn btn-sm btn-circle btn-ghost">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-circle btn-ghost">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="hover">
+                            <td>
+                                <div class="font-bold">Integração API</div>
+                                <div class="text-sm opacity-50">ID: PRJ-004</div>
+                            </td>
+                            <td>
+                                <div class="flex items-center space-x-3">
+                                    <div class="avatar">
+                                        <div class="mask mask-squircle w-8 h-8">
+                                            <img src="https://ui-avatars.com/api/?name=Roberto+Alves&background=6366f1&color=fff" alt="Avatar" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold">Roberto Alves</div>
+                                        <div class="text-sm opacity-50">Back-end</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><div class="badge badge-info">Planejamento</div></td>
+                            <td>
+                                <div class="flex items-center">
+                                    <progress class="progress progress-info w-full" value="10" max="100"></progress>
+                                    <span class="ml-2">10%</span>
+                                </div>
+                            </td>
+                            <td>20/12/2023</td>
+                            <td>
+                                <button class="btn btn-sm btn-circle btn-ghost">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-circle btn-ghost">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tarefas Recentes -->
+            <h2 class="text-xl font-bold mb-4">Tarefas Recentes</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <div class="card bg-base-100 shadow-md transition-all duration-300 task-card">
+                    <div class="card-body p-4">
+                        <div class="flex justify-between items-start">
+                            <h3 class="card-title text-base">Criar wireframes</h3>
+                            <div class="badge badge-primary">Em Andamento</div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2">Criar wireframes para todas as páginas principais do website.</p>
+                        <div class="flex justify-between items-center mt-3">
+                            <div class="flex items-center">
+                                <div class="avatar">
+                                    <div class="w-8 h-8 rounded-full">
+                                        <img src="https://ui-avatars.com/api/?name=Ana+Silva&background=3b82f6&color=fff" alt="Avatar" />
+                                    </div>
+                                </div>
+                                <span class="ml-2 text-sm">Ana Silva</span>
+                            </div>
+                            <span class="text-sm text-gray-500">15/11/2023</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-md transition-all duration-300 task-card">
+                    <div class="card-body p-4">
+                        <div class="flex justify-between items-start">
+                            <h3 class="card-title text-base">Implementar autenticação</h3>
+                            <div class="badge badge-warning">Atrasado</div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2">Implementar sistema de login e autenticação para o aplicativo.</p>
+                        <div class="flex justify-between items-center mt-3">
+                            <div class="flex items-center">
+                                <div class="avatar">
+                                    <div class="w-8 h-8 rounded-full">
+                                        <img src="https://ui-avatars.com/api/?name=Carlos+Mendes&background=10b981&color=fff" alt="Avatar" />
+                                    </div>
+                                </div>
+                                <span class="ml-2 text-sm">Carlos Mendes</span>
+                            </div>
+                            <span class="text-sm text-gray-500">05/11/2023</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-md transition-all duration-300 task-card">
+                    <div class="card-body p-4">
+                        <div class="flex justify-between items-start">
+                            <h3 class="card-title text-base">Criar conteúdo para redes sociais</h3>
+                            <div class="badge badge-success">Concluído</div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2">Desenvolver conteúdo para campanha nas redes sociais.</p>
+                        <div class="flex justify-between items-center mt-3">
+                            <div class="flex items-center">
+                                <div class="avatar">
+                                    <div class="w-8 h-8 rounded-full">
+                                        <img src="https://ui-avatars.com/api/?name=Julia+Freitas&background=f59e0b&color=fff" alt="Avatar" />
+                                    </div>
+                                </div>
+                                <span class="ml-2 text-sm">Julia Freitas</span>
+                            </div>
+                            <span class="text-sm text-gray-500">01/11/2023</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Gantt -->
+            <h2 class="text-xl font-bold mb-4">Timeline do Projeto</h2>
+            <div class="card bg-base-100 shadow-xl mb-6">
+                <div class="card-body">
+                    <div class="gantt-container">
+                        <div id="gantt"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Atividades Recentes -->
+            <h2 class="text-xl font-bold mb-4">Atividades Recentes</h2>
+            <div class="card bg-base-100 shadow-md mb-6">
+                <div class="card-body">
+                    <ul class="timeline timeline-snap-icon max-md:timeline-compact timeline-vertical">
+                        <li>
+                            <div class="timeline-middle">
+                                <i class="fas fa-check-circle text-success"></i>
+                            </div>
+                            <div class="timeline-start md:text-end mb-10">
+                                <time class="font-mono italic">Hoje, 10:30</time>
+                                <div class="text-lg font-black">Julia concluiu a tarefa "Criar conteúdo para redes sociais"</div>
+                            </div>
+                            <hr/>
+                        </li>
+                        <li>
+                            <hr/>
+                            <div class="timeline-middle">
+                                <i class="fas fa-comment-alt text-info"></i>
+                            </div>
+                            <div class="timeline-end mb-10">
+                                <time class="font-mono italic">Hoje, 09:15</time>
+                                <div class="text-lg font-black">Carlos comentou no projeto "App Mobile"</div>
+                                <p>"Precisamos revisar a interface de usuário antes de prosseguir com o desenvolvimento."</p>
+                            </div>
+                            <hr/>
+                        </li>
+                        <li>
+                            <hr/>
+                            <div class="timeline-middle">
+                                <i class="fas fa-plus text-primary"></i>
+                            </div>
+                            <div class="timeline-start md:text-end mb-10">
+                                <time class="font-mono italic">Ontem, 15:45</time>
+                                <div class="text-lg font-black">Ana adicionou uma nova tarefa: "Criar wireframes"</div>
+                            </div>
+                            <hr/>
+                        </li>
+                        <li>
+                            <hr/>
+                            <div class="timeline-middle">
+                                <i class="fas fa-exclamation-circle text-warning"></i>
+                            </div>
+                            <div class="timeline-end mb-10">
+                                <time class="font-mono italic">Ontem, 11:20</time>
+                                <div class="text-lg font-black">Projeto "App Mobile" marcado como atrasado</div>
+                            </div>
+                            <hr/>
+                        </li>
+                        <li>
+                            <hr/>
+                            <div class="timeline-middle">
+                                <i class="fas fa-file-upload text-secondary"></i>
+                            </div>
+                            <div class="timeline-start md:text-end mb-10">
+                                <time class="font-mono italic">01/11/2023, 14:30</time>
+                                <div class="text-lg font-black">Roberto anexou documentos ao projeto "Integração API"</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="drawer-side z-40">
+            <label for="my-drawer-2" aria-label="close sidebar" class="drawer-overlay"></label>
+            <ul class="menu p-4 w-64 min-h-full bg-base-200 text-base-content">
+                <li class="mb-2">
+                    <a class="sidebar-item active flex items-center py-3">
+                        <i class="fas fa-chart-line mr-3"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a class="sidebar-item flex items-center py-3">
+                        <i class="fas fa-project-diagram mr-3"></i>
+                        <span>Meus Projetos</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a class="sidebar-item flex items-center py-3">
+                        <i class="fas fa-tasks mr-3"></i>
+                        <span>Minhas Tarefas</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a class="sidebar-item flex items-center py-3">
+                        <i class="fas fa-users mr-3"></i>
+                        <span>Equipe</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a class="sidebar-item flex items-center py-3">
+                        <i class="far fa-calendar-alt mr-3"></i>
+                        <span>Calendário</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a class="sidebar-item flex items-center py-3">
+                        <i class="fas fa-file-alt mr-3"></i>
+                        <span>Documentos</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a class="sidebar-item flex items-center py-3">
+                        <i class="fas fa-chart-bar mr-3"></i>
+                        <span>Relatórios</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a class="sidebar-item flex items-center py-3">
+                        <i class="fas fa-cog mr-3"></i>
+                        <span>Configurações</span>
+                    </a>
+                </li>
+                <div class="divider"></div>
+                <li>
+                    <a class="sidebar-item flex items-center py-3">
+                        <i class="fas fa-question-circle mr-3"></i>
+                        <span>Ajuda & Suporte</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal Novo Projeto -->
+    <dialog id="new-project-modal" class="modal">
+        <div class="modal-box max-w-3xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">Criar Novo Projeto</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Nome do Projeto</span>
+                    </label>
+                    <input type="text" placeholder="Digite o nome do projeto" class="input input-bordered" />
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Responsável</span>
+                    </label>
+                    <select class="select select-bordered w-full">
+                        <option disabled selected>Selecione um responsável</option>
+                        <option>Ana Silva</option>
+                        <option>Carlos Mendes</option>
+                        <option>Julia Freitas</option>
+                        <option>Roberto Alves</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Data de Início</span>
+                    </label>
+                    <input type="date" class="input input-bordered" />
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Data de Término</span>
+                    </label>
+                    <input type="date" class="input input-bordered" />
+                </div>
+                <div class="form-control md:col-span-2">
+                    <label class="label">
+                        <span class="label-text">Descrição</span>
+                    </label>
+                    <textarea class="textarea textarea-bordered h-24" placeholder="Descreva os objetivos e escopo do projeto"></textarea>
+                </div>
+            </div>
+
+            <div class="divider">Milestones</div>
+            
+            <div id="milestones-container">
+                <div class="milestone-item grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Nome do Milestone</span>
+                        </label>
+                        <input type="text" placeholder="Ex: Fase de Planejamento" class="input input-bordered" />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Data Prevista</span>
+                        </label>
+                        <input type="date" class="input input-bordered" />
+                    </div>
+                    <div class="form-control flex items-end">
+                        <button type="button" class="btn btn-outline btn-error btn-sm mb-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" class="btn btn-outline btn-primary btn-sm mt-2 mb-6">
+                <i class="fas fa-plus mr-2"></i> Adicionar Milestone
+            </button>
+
+            <div class="divider">Membros da Equipe</div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Adicionar Membros</span>
+                    </label>
+                    <select class="select select-bordered w-full">
+                        <option disabled selected>Selecione membros para adicionar</option>
+                        <option>Ana Silva (Designer)</option>
+                        <option>Carlos Mendes (Desenvolvedor)</option>
+                        <option>Julia Freitas (Marketing)</option>
+                        <option>Roberto Alves (Back-end)</option>
+                        <option>Mariana Costa (QA)</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Membros Adicionados</span>
+                    </label>
+                    <div class="flex flex-wrap gap-2 border rounded-lg p-2 min-h-12">
+                        <div class="badge badge-primary gap-1">
+                            Ana Silva
+                            <button><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="badge badge-primary gap-1">
+                            Carlos Mendes
+                            <button><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider">Anexos</div>
+            
+            <div class="form-control mb-6">
+                <label class="label">
+                    <span class="label-text">Anexar Arquivos</span>
+                </label>
+                <input type="file" class="file-input file-input-bordered w-full" multiple />
+                <div class="text-xs text-gray-500 mt-1">Tamanho máximo: 10MB. Formatos: PDF, DOC, XLS, JPG, PNG</div>
+            </div>
+
+            <div class="modal-action">
+                <button class="btn btn-outline">Cancelar</button>
+                <button class="btn btn-primary">Criar Projeto</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Modal Detalhes do Projeto -->
+    <dialog id="project-details-modal" class="modal">
+        <div class="modal-box max-w-4xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-1">Website Redesign</h3>
+            <div class="text-sm text-gray-500 mb-4">ID: PRJ-001 • Criado em: 01/10/2023</div>
+            
+            <div class="tabs tabs-boxed mb-4">
+                <a class="tab tab-active">Visão Geral</a>
+                <a class="tab">Tarefas</a>
+                <a class="tab">Timeline</a>
+                <a class="tab">Equipe</a>
+                <a class="tab">Anexos</a>
+                <a class="tab">Comentários</a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="stats shadow">
+                    <div class="stat">
+                        <div class="stat-title">Status</div>
+                        <div class="stat-value text-primary text-2xl">Em Andamento</div>
+                        <div class="stat-desc">Última atualização: hoje</div>
+                    </div>
+                </div>
+                <div class="stats shadow">
+                    <div class="stat">
+                        <div class="stat-title">Progresso</div>
+                        <div class="stat-value text-2xl">70%</div>
+                        <progress class="progress progress-primary w-full" value="70" max="100"></progress>
+                    </div>
+                </div>
+                <div class="stats shadow">
+                    <div class="stat">
+                        <div class="stat-title">Prazo</div>
+                        <div class="stat-value text-2xl">15/12/2023</div>
+                        <div class="stat-desc">Restam 30 dias</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h4 class="font-bold mb-2">Descrição</h4>
+                    <p class="text-gray-700 mb-4">
+                        Redesenho completo do website corporativo, incluindo nova identidade visual, 
+                        melhorias de usabilidade e otimização para dispositivos móveis. O projeto inclui 
+                        redesenho de todas as páginas principais, implementação de novo CMS e migração de conteúdo.
+                    </p>
+                    
+                    <h4 class="font-bold mb-2">Responsável</h4>
+                    <div class="flex items-center mb-4">
+                        <div class="avatar">
+                            <div class="w-10 h-10 rounded-full">
+                                <img src="https://ui-avatars.com/api/?name=Ana+Silva&background=3b82f6&color=fff" alt="Avatar" />
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <div class="font-medium">Ana Silva</div>
+                            <div class="text-sm text-gray-500">Designer</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-2">Milestones</h4>
+                    <ul class="timeline timeline-vertical timeline-snap-icon">
+                        <li>
+                            <div class="timeline-middle">
+                                <i class="fas fa-check text-success"></i>
+                            </div>
+                            <div class="timeline-start md:text-end mb-4">
+                                <div class="font-medium">Pesquisa de Usuários</div>
+                                <time class="text-xs text-gray-500">Concluído em 15/10/2023</time>
+                            </div>
+                            <hr class="bg-success"/>
+                        </li>
+                        <li>
+                            <hr class="bg-primary"/>
+                            <div class="timeline-middle">
+                                <i class="fas fa-spinner text-primary"></i>
+                            </div>
+                            <div class="timeline-end mb-4">
+                                <div class="font-medium">Design de Interface</div>
+                                <time class="text-xs text-gray-500">Em andamento (70%)</time>
+                            </div>
+                            <hr class="bg-gray-300"/>
+                        </li>
+                        <li>
+                            <hr class="bg-gray-300"/>
+                            <div class="timeline-middle">
+                                <i class="fas fa-circle text-gray-400"></i>
+                            </div>
+                            <div class="timeline-start md:text-end mb-4">
+                                <div class="font-medium">Desenvolvimento Front-end</div>
+                                <time class="text-xs text-gray-500">Previsto para 25/11/2023</time>
+                            </div>
+                            <hr class="bg-gray-300"/>
+                        </li>
+                        <li>
+                            <hr class="bg-gray-300"/>
+                            <div class="timeline-middle">
+                                <i class="fas fa-circle text-gray-400"></i>
+                            </div>
+                            <div class="timeline-end">
+                                <div class="font-medium">Lançamento</div>
+                                <time class="text-xs text-gray-500">Previsto para 15/12/2023</time>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="divider">Tarefas Recentes</div>
+            
+            <div class="overflow-x-auto mb-6">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Tarefa</th>
+                            <th>Responsável</th>
+                            <th>Status</th>
+                            <th>Prazo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Criar wireframes</td>
+                            <td>Ana Silva</td>
+                            <td><div class="badge badge-primary">Em Andamento</div></td>
+                            <td>15/11/2023</td>
+                            <td>
+                                <button class="btn btn-xs btn-ghost" onclick="document.getElementById('task-modal').showModal()">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Design de páginas principais</td>
+                            <td>Ana Silva</td>
+                            <td><div class="badge badge-success">Concluído</div></td>
+                            <td>05/11/2023</td>
+                            <td>
+                                <button class="btn btn-xs btn-ghost">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Pesquisa de usuários</td>
+                            <td>Julia Freitas</td>
+                            <td><div class="badge badge-success">Concluído</div></td>
+                            <td>15/10/2023</td>
+                            <td>
+                                <button class="btn btn-xs btn-ghost">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="divider">Comentários Recentes</div>
+            
+            <div class="space-y-4 mb-6">
+                <div class="flex gap-3">
+                    <div class="avatar">
+                        <div class="w-10 h-10 rounded-full">
+                            <img src="https://ui-avatars.com/api/?name=Carlos+Mendes&background=10b981&color=fff" alt="Avatar" />
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold">Carlos Mendes</span>
+                            <span class="text-xs text-gray-500">Hoje, 09:15</span>
+                        </div>
+                        <p class="text-sm">Os wireframes estão ótimos! Podemos começar o desenvolvimento assim que o design estiver finalizado.</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <div class="avatar">
+                        <div class="w-10 h-10 rounded-full">
+                            <img src="https://ui-avatars.com/api/?name=Ana+Silva&background=3b82f6&color=fff" alt="Avatar" />
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold">Ana Silva</span>
+                            <span class="text-xs text-gray-500">Ontem, 14:30</span>
+                        </div>
+                        <p class="text-sm">Finalizei o design das páginas principais. Aguardando feedback para prosseguir com as páginas internas.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <div class="avatar">
+                    <div class="w-10 h-10 rounded-full">
+                        <img src="https://ui-avatars.com/api/?name=Ana+Silva&background=3b82f6&color=fff" alt="Avatar" />
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <textarea class="textarea textarea-bordered w-full" placeholder="Adicione um comentário..."></textarea>
+                    <button class="btn btn-primary btn-sm mt-2">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Modal Detalhes da Tarefa -->
+    <dialog id="task-modal" class="modal">
+        <div class="modal-box max-w-2xl task-modal">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-1">Criar wireframes</h3>
+            <div class="text-sm text-gray-500 mb-4">Projeto: Website Redesign • Criado em: 01/11/2023</div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">Status</span>
+                    </label>
+                    <select class="select select-bordered w-full">
+                        <option>A Fazer</option>
+                        <option selected>Em Andamento</option>
+                        <option>Em Revisão</option>
+                        <option>Concluído</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">Prioridade</span>
+                    </label>
+                    <select class="select select-bordered w-full">
+                        <option>Baixa</option>
+                        <option>Média</option>
+                        <option selected>Alta</option>
+                        <option>Crítica</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">Responsável</span>
+                    </label>
+                    <select class="select select-bordered w-full">
+                        <option selected>Ana Silva</option>
+                        <option>Carlos Mendes</option>
+                        <option>Julia Freitas</option>
+                        <option>Roberto Alves</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">Prazo</span>
+                    </label>
+                    <input type="date" class="input input-bordered" value="2023-11-15" />
+                </div>
+            </div>
+            
+            <div class="form-control mb-6">
+                <label class="label">
+                    <span class="label-text font-medium">Descrição</span>
+                </label>
+                <textarea class="textarea textarea-bordered h-24">Criar wireframes para todas as páginas principais do website, incluindo homepage, páginas de produtos, blog e contato. Os wireframes devem ser detalhados e incluir todos os elementos de UI.</textarea>
+            </div>
+            
+            <div class="form-control mb-6">
+                <label class="label">
+                    <span class="label-text font-medium">Subtarefas</span>
+                </label>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" checked class="checkbox checkbox-primary mr-2" />
+                        <input type="text" value="Wireframe da Homepage" class="input input-bordered input-sm flex-1" />
+                        <button class="btn btn-ghost btn-sm ml-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" checked class="checkbox checkbox-primary mr-2" />
+                        <input type="text" value="Wireframe das páginas de produtos" class="input input-bordered input-sm flex-1" />
+                        <button class="btn btn-ghost btn-sm ml-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" class="checkbox checkbox-primary mr-2" />
+                        <input type="text" value="Wireframe do blog" class="input input-bordered input-sm flex-1" />
+                        <button class="btn btn-ghost btn-sm ml-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" class="checkbox checkbox-primary mr-2" />
+                        <input type="text" value="Wireframe da página de contato" class="input input-bordered input-sm flex-1" />
+                        <button class="btn btn-ghost btn-sm ml-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <button class="btn btn-outline btn-sm mt-2">
+                    <i class="fas fa-plus mr-2"></i> Adicionar Subtarefa
+                </button>
+            </div>
+            
+            <div class="form-control mb-6">
+                <label class="label">
+                    <span class="label-text font-medium">Anexos</span>
+                </label>
+                <div class="border rounded-lg p-3 space-y-2">
+                    <div class="flex justify-between items-center p-2 bg-base-200 rounded">
+                        <div class="flex items-center">
+                            <i class="fas fa-file-pdf text-red-500 mr-2"></i>
+                            <span>referencia_design.pdf</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn btn-ghost btn-xs">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn btn-ghost btn-xs text-error">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-base-200 rounded">
+                        <div class="flex items-center">
+                            <i class="fas fa-file-image text-blue-500 mr-2"></i>
+                            <span>inspiracao_ui.jpg</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn btn-ghost btn-xs">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn btn-ghost btn-xs text-error">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <input type="file" class="file-input file-input-bordered w-full mt-2" />
+            </div>
+            
+            <div class="divider">Comentários</div>
+            
+            <div class="space-y-4 mb-6">
+                <div class="flex gap-3">
+                    <div class="avatar">
+                        <div class="w-8 h-8 rounded-full">
+                            <img src="https://ui-avatars.com/api/?name=Carlos+Mendes&background=10b981&color=fff" alt="Avatar" />
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold">Carlos Mendes</span>
+                            <span class="text-xs text-gray-500">Ontem, 16:45</span>
+                        </div>
+                        <p class="text-sm">Podemos usar o Figma para criar os wireframes? Seria mais fácil para compartilhar com a equipe.</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <div class="avatar">
+                        <div class="w-8 h-8 rounded-full">
+                            <img src="https://ui-avatars.com/api/?name=Ana+Silva&background=3b82f6&color=fff" alt="Avatar" />
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold">Ana Silva</span>
+                            <span class="text-xs text-gray-500">Ontem, 17:20</span>
+                        </div>
+                        <p class="text-sm">Sim, vou usar o Figma. Já iniciei o projeto e compartilharei o link assim que tiver os primeiros rascunhos.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <div class="avatar">
+                    <div class="w-8 h-8 rounded-full">
+                        <img src="https://ui-avatars.com/api/?name=Ana+Silva&background=3b82f6&color=fff" alt="Avatar" />
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <textarea class="textarea textarea-bordered w-full" placeholder="Adicione um comentário..."></textarea>
+                    <button class="btn btn-primary btn-sm mt-2">Enviar</button>
+                </div>
+            </div>
+            
+            <div class="modal-action">
+                <button class="btn btn-outline">Cancelar</button>
+                <button class="btn btn-primary">Salvar Alterações</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        // Inicializar gráficos
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gráfico de Status dos Projetos
+            const projectStatusCtx = document.getElementById('projectStatusChart').getContext('2d');
+            const projectStatusChart = new Chart(projectStatusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Em Andamento', 'Concluído', 'Atrasado', 'Planejamento'],
+                    datasets: [{
+                        data: [4, 2, 1, 2],
+                        backgroundColor: [
+                            '#3b82f6', // primary
+                            '#10b981', // success
+                            '#f59e0b', // warning
+                            '#6366f1'  // info
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de Atividade da Equipe
+            const teamActivityCtx = document.getElementById('teamActivityChart').getContext('2d');
+            const teamActivityChart = new Chart(teamActivityCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Ana', 'Carlos', 'Julia', 'Roberto', 'Mariana'],
+                    datasets: [{
+                        label: 'Tarefas Concluídas',
+                        data: [12, 8, 15, 7, 10],
+                        backgroundColor: '#3b82f6',
+                    }, {
+                        label: 'Tarefas Pendentes',
+                        data: [5, 7, 3, 8, 4],
+                        backgroundColor: '#f59e0b',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Inicializar Gantt Chart
+            const tasks = [
+                {
+                    id: 'Task 1',
+                    name: 'Website Redesign',
+                    start: '2023-11-01',
+                    end: '2023-12-15',
+                    progress: 70,
+                    dependencies: ''
+                },
+                {
+                    id: 'Task 1-1',
+                    name: 'Pesquisa de Usuários',
+                    start: '2023-11-01',
+                    end: '2023-11-15',
+                    progress: 100,
+                    dependencies: ''
+                },
+                {
+                    id: 'Task 1-2',
+                    name: 'Design de Interface',
+                    start: '2023-11-15',
+                    end: '2023-11-30',
+                    progress: 70,
+                    dependencies: 'Task 1-1'
+                },
+                {
+                    id: 'Task 1-3',
+                    name: 'Desenvolvimento Front-end',
+                    start: '2023-11-25',
+                    end: '2023-12-10',
+                    progress: 10,
+                    dependencies: 'Task 1-2'
+                },
+                {
+                    id: 'Task 1-4',
+                    name: 'Lançamento',
+                    start: '2023-12-10',
+                    end: '2023-12-15',
+                    progress: 0,
+                    dependencies: 'Task 1-3'
+                },
+                {
+                    id: 'Task 2',
+                    name: 'App Mobile',
+                    start: '2023-10-15',
+                    end: '2023-11-30',
+                    progress: 45,
+                    dependencies: ''
+                },
+                {
+                    id: 'Task 3',
+                    name: 'Campanha de Marketing',
+                    start: '2023-10-01',
+                    end: '2023-11-01',
+                    progress: 100,
+                    dependencies: ''
+                }
+            ];
+
+            const gantt = new Gantt("#gantt", tasks, {
+                header_height: 50,
+                column_width: 30,
+                step: 24,
+                view_modes: ['Day', 'Week', 'Month'],
+                bar_height: 20,
+                bar_corner_radius: 3,
+                arrow_curve: 5,
+                padding: 18,
+                view_mode: 'Month',
+                date_format: 'YYYY-MM-DD',
+                custom_popup_html: function(task) {
+                    return `
+                        <div class="card bg-base-100 shadow-xl p-2">
+                            <div class="font-bold">${task.name}</div>
+                            <div class="text-xs">
+                                ${task._start.format('DD/MM/YYYY')} - ${task._end.format('DD/MM/YYYY')}
+                            </div>
+                            <div class="text-xs mt-1">Progresso: ${task.progress}%</div>
+                        </div>
+                    `;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
